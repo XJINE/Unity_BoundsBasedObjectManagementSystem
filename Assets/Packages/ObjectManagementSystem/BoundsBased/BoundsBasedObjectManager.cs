@@ -52,35 +52,25 @@ namespace ObjectManagementSystem.BoundsBased
             = new ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<S, T>>>(managedObjectsInBoundsReadOnly);
         }
 
-        // CAUTION:
-        // Can not be able to override generic's where.
-        // So this is not clearly safe. base.AddManagedObject() might be called.
-
-        public new U AddManagedObject<U>(GameObject gameObject) where U : BoundsBasedManagedObject<S, T>
+        public override U AddManagedObject<U>(GameObject gameObject)
         {
-            if (CheckManagedObjectCountIsMax())
+            // NOTE:
+            // Can not be able to override generic's "where".
+
+            U managedObject = base.AddManagedObject<U>(gameObject);
+
+            if (managedObject == null)
             {
                 return null;
             }
 
-            U boundsBaseManagedObject = gameObject.AddComponent<U>() as U;
+            var boundsBasedManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
+            int boundsIndex = GetBelongBoundsIndex(boundsBasedManagedObject.transform.position);
 
-            base.managedObjects.Add(boundsBaseManagedObject);
+            this.managedObjectsInBounds[boundsIndex == -1 ? 0 : boundsIndex].Add(boundsBasedManagedObject);
+            boundsBasedManagedObject.UpdateBelongBounds(this, boundsIndex);
 
-            int boundsIndex = GetBelongBoundsIndex(boundsBaseManagedObject.transform.position);
-
-            if (boundsIndex != -1)
-            {
-                this.managedObjectsInBounds[boundsIndex].Add(boundsBaseManagedObject);
-            }
-            else 
-            {
-                // Nothing to do now.
-            }
-
-            boundsBaseManagedObject.UpdateBelongBounds(this, boundsIndex);
-
-            return boundsBaseManagedObject;
+            return managedObject;
         }
 
         public override bool ReleaseManagedObject(ManagedObject<T> managedObject, bool fromOnDestroy = false)
@@ -147,6 +137,9 @@ namespace ObjectManagementSystem.BoundsBased
 
             managedObject.UpdateBelongBounds(this, belongBoundsIndex);
         }
+
+        // NOTE:
+        // If the point not belong in any bounds, return -1.
 
         public int GetBelongBoundsIndex(Vector3 point, int currentIndex = 0)
         {

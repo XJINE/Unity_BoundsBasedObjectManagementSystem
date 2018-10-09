@@ -29,6 +29,12 @@ namespace ObjectManagementSystem.BoundsBased
             }
         }
 
+        public bool OutOfBounds
+        {
+            get;
+            private set;
+        }
+
         public new Transform transform
         {
             get;
@@ -68,13 +74,24 @@ namespace ObjectManagementSystem.BoundsBased
             // CAUTION:
             // This function called from BoundsBaseObjectManager regurally.
             // Unfortunately, this is not safe.
-
+            
             if (this.BoundsBasedObjectManager != manager)
             {
                 return;
             }
 
-            this.BelongBoundsIndex = belongBoundsIndex;
+            // NOTE:
+            // If managed object belong in out of bounds, keep previous data.
+
+            if (belongBoundsIndex == -1)
+            {
+                this.OutOfBounds = true;
+            }
+            else
+            {
+                this.OutOfBounds = false;
+                this.BelongBoundsIndex = belongBoundsIndex;
+            }
         }
 
         #endregion Method

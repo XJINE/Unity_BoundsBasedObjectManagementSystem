@@ -70,7 +70,7 @@ namespace ObjectManagementSystem
             }
 
             U managedObject = gameObject.AddComponent(typeof(U)) as U;
-            T data = ReturnManagedObjectData(gameObject);
+            T data = InitializeManagedObjectData(gameObject);
 
             managedObject.Initialize(this, data);
 
@@ -79,7 +79,7 @@ namespace ObjectManagementSystem
             return managedObject;
         }
 
-        protected abstract T ReturnManagedObjectData(GameObject managedGameObject);
+        protected abstract T InitializeManagedObjectData(GameObject managedGameObject);
 
         public virtual bool ReleaseManagedObject(ManagedObject<T> managedObject, bool fromOnDestroy = false)
         {

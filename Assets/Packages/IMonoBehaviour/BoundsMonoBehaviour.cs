@@ -9,8 +9,6 @@ public abstract class BoundsMonoBehaviour : MonoBehaviour, IBoundsMonoBehaviour
 
     public Color gizmoColor = Color.white;
 
-    protected Color gizmoColorTemp = Color.white;
-
     #endregion Field
 
     #region Property
@@ -32,10 +30,10 @@ public abstract class BoundsMonoBehaviour : MonoBehaviour, IBoundsMonoBehaviour
             return;
         }
 
-        this.gizmoColorTemp = Gizmos.color;
+        Color previousColor = Gizmos.color;
         Gizmos.color = this.gizmoColor;
         Gizmos.DrawWireCube(this.Bounds.center, this.Bounds.size);
-        Gizmos.color = this.gizmoColorTemp;
+        Gizmos.color = previousColor;
     }
 
     #endregion Method

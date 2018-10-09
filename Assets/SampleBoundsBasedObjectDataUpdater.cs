@@ -16,16 +16,19 @@ namespace ObjectManagementSystem.BoundsBased
 
         protected void Update()
         {
-            if (Time.frameCount % 180 == 0)
+            // NOTE:
+            // You can reference in MangedObject & the Data in each Bounds.
+
+            // Ex.
+            // And following code is more fast.
+            // protected int boundsIndex this.manager.GetBoundsIndex(this.bounds);
+            // this.manager.GetObjectsInBounds(boundsIndex);
+
+            var objectsInBounds = this.manager.GetObjectsInBounds(this.bounds);
+
+            foreach (var objectInBounds in objectsInBounds)
             {
-                var objectsInBounds = this.manager.GetObjectsInBounds(this.bounds);
-
-                float scale = Random.Range(0.5f, 3f);
-
-                foreach (var objectInBounds in objectsInBounds)
-                {
-                    objectInBounds.Data.scale = scale;
-                }
+                objectInBounds.Data.lifeCount -= 1f;
             }
         }
 
