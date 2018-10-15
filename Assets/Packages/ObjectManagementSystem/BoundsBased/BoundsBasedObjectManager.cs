@@ -33,9 +33,12 @@ namespace ObjectManagementSystem.BoundsBased
 
         #region Method
 
-        public override void Initialize()
+        public override bool Initialize()
         {
-            base.Initialize();
+            if (!base.Initialize())
+            {
+                return false;
+            };
 
             this.Bounds = new ReadOnlyCollection<S>(this.bounds);
 
@@ -50,6 +53,8 @@ namespace ObjectManagementSystem.BoundsBased
 
             this.ManagedObjectsInBounds
             = new ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<S, T>>>(managedObjectsInBoundsReadOnly);
+
+            return true;
         }
 
         public override U AddManagedObject<U>(GameObject gameObject)
