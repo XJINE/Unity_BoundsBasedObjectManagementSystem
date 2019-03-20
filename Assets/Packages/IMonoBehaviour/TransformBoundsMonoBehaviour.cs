@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
 
-public class TransformBoundsMonoBehaviour : BoundsMonoBehaviour, ITransformMonoBehaviour
+public class TransformBoundsMonoBehaviour : BoundsMonoBehaviour, ITransform
 {
     // NOTE:
     // Some of these are implemented to fast calculation.
@@ -18,57 +17,23 @@ public class TransformBoundsMonoBehaviour : BoundsMonoBehaviour, ITransformMonoB
     //     this.center = min + this.extents;
     // }
 
-    #region Class
-
-    [System.Serializable]
-    public class BoundsUpdateEvent : UnityEvent<Bounds, Bounds> { }
-
-    #endregion Class
-
     #region Field
 
     public bool isStatic;
-
-    public BoundsUpdateEvent boundsUpdateEvent;
 
     #endregion Field
 
     #region Property
 
-    public new Transform transform
-    {
-        get;
-        protected set;
-    }
+    public new Transform transform { get; protected set; }
 
-    public override Bounds Bounds
-    {
-        get;
-        protected set;
-    }
+    public override Bounds Bounds { get; protected set; }
 
-    public virtual Vector3 Min
-    {
-        get;
-        protected set;
-    }
+    public virtual Vector3 Min { get; protected set; }
 
-    public virtual Vector3 Max
-    {
-        get;
-        protected set;
-    }
+    public virtual Vector3 Max { get; protected set; }
 
-    public virtual bool IsUpdate
-    {
-        get; protected set;
-    }
-
-    public bool IsInitialized
-    {
-        get;
-        protected set;
-    }
+    public bool IsInitialized { get; protected set; }
 
     #endregion Property
 
@@ -76,7 +41,9 @@ public class TransformBoundsMonoBehaviour : BoundsMonoBehaviour, ITransformMonoB
 
     protected virtual void Awake()
     {
-        Initialize();
+        this.transform = base.transform;
+
+        UpdateBounds();
     }
 
     protected virtual void Update()
@@ -89,42 +56,11 @@ public class TransformBoundsMonoBehaviour : BoundsMonoBehaviour, ITransformMonoB
         UpdateBounds();
     }
 
-    public virtual void Initialize()
-    {
-        if (this.IsInitialized)
-        {
-            return;
-        }
-
-        this.transform = base.transform;
-
-        UpdateBounds();
-
-        this.IsInitialized = true;
-    }
-
     public virtual void UpdateBounds()
     {
-        Bounds previousBounds = this.Bounds;
-
         this.Bounds = new Bounds(this.transform.position, this.transform.localScale);
         this.Min = this.Bounds.min;
         this.Max = this.Bounds.max;
-
-        if (previousBounds != this.Bounds)
-        {
-            this.boundsUpdateEvent.Invoke(previousBounds, this.Bounds);
-        }
-    }
-
-    public Vector3 GetRandomPoint()
-    {
-        return new Vector3()
-        {
-            x = Random.Range(this.Min.x, this.Max.x),
-            y = Random.Range(this.Min.y, this.Max.y),
-            z = Random.Range(this.Min.z, this.Max.z),
-        };
     }
 
     public bool Contains(Vector3 point)

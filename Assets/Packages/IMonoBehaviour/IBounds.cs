@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 
-public interface IRendererMonoBehaviour
+public interface IBounds
 {
     #region Property
 
-    Renderer Renderer { get; }
+    Bounds Bounds { get; }
 
     #endregion Property
 }

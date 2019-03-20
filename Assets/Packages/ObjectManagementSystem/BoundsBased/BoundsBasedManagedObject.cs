@@ -2,62 +2,36 @@
 
 namespace ObjectManagementSystem.BoundsBased
 {
-    public class BoundsBasedManagedObject<T, U> : ManagedObject<U> where T : TransformBoundsMonoBehaviour, ITransformMonoBehaviour
+    public class BoundsBasedManagedObject<T, U> : ManagedObject<U> where T : TransformBoundsMonoBehaviour, ITransform
     {
         #region Property
 
         // NOTE:
         // Keep reference to reduce cost of cast from ManagedObject<T>.ObjectManager.
 
-        public BoundsBasedObjectManager<T, U> BoundsBasedObjectManager
-        {
-            get;
-            protected set;
-        }
+        public BoundsBasedObjectManager<T, U> BoundsBasedObjectManager { get; protected set; }
 
-        public int BelongBoundsIndex
-        {
-            get;
-            protected set;
-        }
+        public int BelongBoundsIndex { get; protected set; }
 
-        public T BelongBounds
-        {
-            get
-            {
-                return this.BoundsBasedObjectManager.Bounds[this.BelongBoundsIndex];
-            }
-        }
+        public T BelongBounds { get { return this.BoundsBasedObjectManager.Bounds[this.BelongBoundsIndex]; } }
 
-        public bool OutOfBounds
-        {
-            get;
-            private set;
-        }
+        public bool OutOfBounds { get; private set; }
 
-        public new Transform transform
-        {
-            get;
-            protected set;
-        }
+        public new Transform transform { get; protected set; }
 
         #endregion Property
 
         #region Method
 
+        protected override void Awake()
+        {
+            this.BoundsBasedObjectManager = (BoundsBasedObjectManager<T, U>)objectManager;
+            this.transform = base.transform;
+        }
+
         protected virtual void LateUpdate()
         {
             UpdateBelongBounds();
-        }
-
-        public override void Initialize(ObjectManager<U> objectManager, U data)
-        {
-            if (base.ObjectManager == null)
-            {
-                base.Initialize(objectManager, data);
-                this.BoundsBasedObjectManager = (BoundsBasedObjectManager<T, U>)objectManager;
-                this.transform = base.transform;
-            }
         }
 
         public virtual void UpdateBelongBounds()

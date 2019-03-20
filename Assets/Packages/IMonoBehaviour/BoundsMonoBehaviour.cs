@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [ExecuteInEditMode]
-public abstract class BoundsMonoBehaviour : MonoBehaviour, IBoundsMonoBehaviour
+public abstract class BoundsMonoBehaviour : MonoBehaviour, IBounds
 {
     #region Field
 
@@ -13,11 +13,7 @@ public abstract class BoundsMonoBehaviour : MonoBehaviour, IBoundsMonoBehaviour
 
     #region Property
 
-    public abstract Bounds Bounds
-    {
-        get;
-        protected set;
-    }
+    public abstract Bounds Bounds { get; protected set; }
 
     #endregion Property
 
@@ -30,10 +26,11 @@ public abstract class BoundsMonoBehaviour : MonoBehaviour, IBoundsMonoBehaviour
             return;
         }
 
-        Color previousColor = Gizmos.color;
+        Color prevColor = Gizmos.color;
+
         Gizmos.color = this.gizmoColor;
         Gizmos.DrawWireCube(this.Bounds.center, this.Bounds.size);
-        Gizmos.color = previousColor;
+        Gizmos.color = prevColor;
     }
 
     #endregion Method

@@ -4,20 +4,20 @@ using System.Collections.ObjectModel;
 
 namespace ObjectManagementSystem
 {
-    public abstract class ObjectManager<T> : MonoBehaviour
+    public class ObjectManager<T> : MonoBehaviour, IInitializable
     {
-        #region Field
-
-        [SerializeField]
-        protected int maxCount = 100;
+        #region Property
 
         protected List<ManagedObject<T>> managedObjects;
 
-        protected bool isInitialized;
+        public ReadOnlyCollection<ManagedObject<T>> ManagedObjects
+        {
+            private set;
+            get;
+        }
 
-        #endregion Field
-
-        #region Property
+        [SerializeField]
+        protected int maxCount = 100;
 
         public int MaxCount
         {
@@ -29,15 +29,14 @@ namespace ObjectManagementSystem
             }
         }
 
-        public ReadOnlyCollection<ManagedObject<T>> ManagedObjects
+        public bool IsFilled
         {
-            private set;
-            get;
+            get { return this.managedObjects.Count >= this.maxCount; }
         }
 
         public bool IsInitialized
         {
-            get { return this.isInitialized; }
+            get; protected set;
         }
 
         #endregion Property
@@ -51,54 +50,47 @@ namespace ObjectManagementSystem
 
         public virtual bool Initialize()
         {
-            if (this.isInitialized)
+            if (this.IsInitialized)
             {
                 return false;
             }
+            
+            this.IsInitialized = true;
 
             this.managedObjects = new List<ManagedObject<T>>();
             this.ManagedObjects = new ReadOnlyCollection<ManagedObject<T>>(this.managedObjects);
-
-            this.isInitialized = true;
 
             return true;
         }
 
         public virtual U AddManagedObject<U>(GameObject gameObject) where U : ManagedObject<T>
         {
-            if (CheckManagedObjectCountIsMax())
+            if (this.IsFilled)
             {
                 return null;
             }
 
             U managedObject = gameObject.AddComponent(typeof(U)) as U;
-            T data = InitializeManagedObjectData(gameObject);
-
-            managedObject.Initialize(this, data);
+            managedObject.ObjectManager = this;
 
             this.managedObjects.Add(managedObject);
 
             return managedObject;
         }
 
-        protected abstract T InitializeManagedObjectData(GameObject managedGameObject);
-
-        public virtual bool ReleaseManagedObject(ManagedObject<T> managedObject, bool fromOnDestroy = false)
+        public virtual void ReleaseManagedObject(ManagedObject<T> managedObject)
         {
-            // NOTE:
-            // (1) Remove reference from list when called from ManagedObject.OnDestroy.
-            // (2) Destroy object when called from ReleaseManagedObject directly.
-
-            if (fromOnDestroy)
+            if (this.IsManage(managedObject))
             {
-                this.managedObjects.Remove(managedObject);
-            }
-            else
-            {
-                GameObject.Destroy(managedObject);
-            }
+                if (this.managedObjects.Remove(managedObject))
+                {
+                    // CAUTION:
+                    // Destroy calls ReleaseManagedObject again
+                    // with ManagedObject<T>.OnDestroy().
 
-            return true;
+                    GameObject.Destroy(managedObject);
+                }
+            }
         }
 
         public virtual void ReleaseAllManagedObjects()
@@ -111,27 +103,13 @@ namespace ObjectManagementSystem
             }
         }
 
-        public virtual void ReleaseOldManagedObjects(int releaseCount)
+        public virtual void RemoveManagedObject(ManagedObject<T> managedObject)
         {
-            for (int i = 0; i < releaseCount; i++)
+            if (this.IsManage(managedObject))
             {
-                if (this.managedObjects.Count > 0)
-                {
-                    ReleaseManagedObject(this.managedObjects[0]);
-                }
+                this.managedObjects.Remove(managedObject);
+                GameObject.Destroy(managedObject.gameObject);
             }
-        }
-
-        public virtual bool RemoveManagedObject(ManagedObject<T> managedObject)
-        {
-            if (!CheckObjectIsManaged(managedObject))
-            {
-                return false;
-            }
-
-            GameObject.Destroy(managedObject.gameObject);
-
-            return true;
         }
 
         public virtual void RemoveAllManagedObjects()
@@ -165,12 +143,7 @@ namespace ObjectManagementSystem
             }
         }
 
-        public bool CheckManagedObjectCountIsMax()
-        {
-            return this.managedObjects.Count >= this.maxCount;
-        }
-
-        public bool CheckObjectIsManaged(ManagedObject<T> managedObject)
+        public bool IsManage(ManagedObject<T> managedObject)
         {
             return managedObject.ObjectManager == this;
         }
