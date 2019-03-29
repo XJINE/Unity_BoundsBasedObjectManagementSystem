@@ -69,10 +69,7 @@ namespace ObjectManagementSystem.BoundsBased
             }
 
             var boundsBasedManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
-            int belongBoundsIndex = GetBelongBoundsIndex(boundsBasedManagedObject.transform.position);
-
-            this.managedObjectsInBounds[belongBoundsIndex == -1 ? 0 : belongBoundsIndex].Add(boundsBasedManagedObject);
-            boundsBasedManagedObject.UpdateBelongBounds(this, belongBoundsIndex);
+            boundsBasedManagedObject.UpdateBelongBounds();
 
             return managedObject;
         }
@@ -112,32 +109,30 @@ namespace ObjectManagementSystem.BoundsBased
             }
         }
 
-        public virtual void UpdateBelongBoundsIndex(BoundsBasedManagedObject<S, T> managedObject)
+        public virtual void UpdateBelongBoundsIndex
+        (BoundsBasedManagedObject<S, T> managedObject, int previousBoundsIndex)
         {
-            if (!CheckObjectIsManaged(managedObject))
+            if (!base.IsManage(managedObject))
             {
                 return;
             }
 
-            int belongBoundsIndex = GetBelongBoundsIndex(managedObject.transform.position,
-                                                         managedObject.BelongBoundsIndex);
-
-            if (managedObject.BelongBoundsIndex == belongBoundsIndex)
+            if (previousBoundsIndex != -1)
             {
-                return;
+                int index = this.managedObjectsInBounds[previousBoundsIndex].IndexOf(managedObject);
+
+                if (index < 0)
+                {
+                    return;
+                }
+
+                this.managedObjectsInBounds[previousBoundsIndex].RemoveAt(index);
             }
 
             if (managedObject.BelongBoundsIndex != -1)
             {
-                this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Remove(managedObject);
+                this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Add(managedObject);
             }
-
-            if (belongBoundsIndex != -1)
-            {
-                this.managedObjectsInBounds[belongBoundsIndex].Add(managedObject);
-            }
-
-            managedObject.UpdateBelongBounds(this, belongBoundsIndex);
         }
 
         public int GetBelongBoundsIndex(Vector3 point, int currentIndex = 0)

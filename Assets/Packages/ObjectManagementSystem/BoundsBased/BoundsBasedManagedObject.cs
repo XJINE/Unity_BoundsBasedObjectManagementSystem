@@ -6,12 +6,9 @@ namespace ObjectManagementSystem.BoundsBased
     {
         #region Property
 
-        // NOTE:
-        // Keep reference to reduce cost of cast from ManagedObject<T>.ObjectManager.
-
         public BoundsBasedObjectManager<T, U> BoundsBasedObjectManager { get; protected set; }
 
-        public int BelongBoundsIndex { get; protected set; }
+        public int BelongBoundsIndex { get; protected set; } = -1;
 
         public T BelongBounds { get { return this.BoundsBasedObjectManager.Bounds[this.BelongBoundsIndex]; } }
 
@@ -25,7 +22,7 @@ namespace ObjectManagementSystem.BoundsBased
 
         protected override void Awake()
         {
-            this.BoundsBasedObjectManager = (BoundsBasedObjectManager<T, U>)objectManager;
+            this.BoundsBasedObjectManager = (BoundsBasedObjectManager<T, U>)base.objectManager;
             this.transform = base.transform;
         }
 
@@ -40,31 +37,16 @@ namespace ObjectManagementSystem.BoundsBased
             // This method called from every LateUpdate().
             // However, you can call this method to manual update if you need.
 
-            this.BoundsBasedObjectManager.UpdateBelongBoundsIndex(this);
-        }
+            int previousBoundsIndex = this.BelongBoundsIndex;
 
-        public virtual void UpdateBelongBounds(BoundsBasedObjectManager<T, U> manager, int belongBoundsIndex)
-        {
-            // CAUTION:
-            // This function called from BoundsBaseObjectManager regurally.
-            // Unfortunately, this is not safe.
-            
-            if (this.BoundsBasedObjectManager != manager)
-            {
-                return;
-            }
+            this.BelongBoundsIndex = this.BoundsBasedObjectManager.GetBelongBoundsIndex
+                                     (this.transform.position, this.BelongBoundsIndex);
 
-            // NOTE:
-            // If managed object belong in out of bounds, keep previous data.
+            this.OutOfBounds = this.BelongBoundsIndex == -1;
 
-            if (belongBoundsIndex == -1)
+            if (previousBoundsIndex != this.BelongBoundsIndex)
             {
-                this.OutOfBounds = true;
-            }
-            else
-            {
-                this.OutOfBounds = false;
-                this.BelongBoundsIndex = belongBoundsIndex;
+                this.BoundsBasedObjectManager.UpdateBelongBoundsIndex(this, previousBoundsIndex);
             }
         }
 
