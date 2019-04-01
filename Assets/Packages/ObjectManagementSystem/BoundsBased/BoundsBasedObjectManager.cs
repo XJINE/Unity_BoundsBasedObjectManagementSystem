@@ -58,7 +58,7 @@ namespace ObjectManagementSystem.BoundsBased
 
         public override U AddManagedObject<U>(GameObject gameObject)
         {
-            // NOTE:
+            // CAUTION:
             // Can not be able to override generic's "where".
 
             U managedObject = base.AddManagedObject<U>(gameObject);
@@ -76,36 +76,25 @@ namespace ObjectManagementSystem.BoundsBased
 
         public override void ReleaseManagedObject(ManagedObject<T> managedObject)
         {
-            if (!base.IsManage(managedObject))
+            if (base.IsManage(managedObject))
             {
-                return;
-            }
+                if (base.managedObjects.Remove(managedObject))
+                {
+                    BoundsBasedManagedObject<S, T> boundsBaseManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
 
-            BoundsBasedManagedObject<S, T> boundsBaseManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
+                    if (boundsBaseManagedObject == null)
+                    {
+                        return;
+                    }
 
-            if (boundsBaseManagedObject == null)
-            {
-                return;
-            }
+                    this.managedObjectsInBounds[boundsBaseManagedObject.BelongBoundsIndex].Remove(boundsBaseManagedObject);
 
-            if (fromOnDestroy)
-            {
-                base.managedObjects.Remove(managedObject);
+                    // CAUTION:
+                    // Destroy calls ReleaseManagedObject again
+                    // with ManagedObject<T>.OnDestroy().
 
-                // NOTE:
-                // Comment out following code when refactored this.
-                // Maybe thorwing Exception is more better for debug.
-                // 
-                // if (boundsBaseManagedObject.BelongBoundsIndex != -1
-                //  && boundsBaseManagedObject.BelongBoundsIndex < this.managedObjectsInBounds.Count)
-                // {
-                // }
-
-                this.managedObjectsInBounds[boundsBaseManagedObject.BelongBoundsIndex].Remove(boundsBaseManagedObject);
-            }
-            else
-            {
-                GameObject.Destroy(managedObject);
+                    GameObject.Destroy(managedObject);
+                }
             }
         }
 
