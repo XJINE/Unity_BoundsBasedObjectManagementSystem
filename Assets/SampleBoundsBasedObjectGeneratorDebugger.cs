@@ -5,7 +5,6 @@ namespace ObjectManagementSystem.BoundsBased
     [RequireComponent(typeof(SampleBoundsBasedObjectGenerator))]
     public class SampleBoundsBasedObjectGeneratorDebugger : MonoBehaviour
     {
-
         #region Field
 
         public KeyCode generateKey = KeyCode.Return;

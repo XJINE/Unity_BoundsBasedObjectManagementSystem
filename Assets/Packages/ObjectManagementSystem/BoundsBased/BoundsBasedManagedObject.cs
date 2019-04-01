@@ -1,20 +1,25 @@
-﻿using UnityEngine;
-
-namespace ObjectManagementSystem.BoundsBased
+﻿namespace ObjectManagementSystem.BoundsBased
 {
-    public class BoundsBasedManagedObject<T, U> : ManagedObject<U> where T : TransformBoundsMonoBehaviour, ITransform
+    public class BoundsBasedManagedObject<BOUNDS, DATA>
+        : TransformMonoBehaviour where BOUNDS : TransformBoundsMonoBehaviour
     {
         #region Property
 
-        public BoundsBasedObjectManager<T, U> BoundsBasedObjectManager { get; protected set; }
+        protected BoundsBasedObjectManager<BOUNDS, DATA> manager;
 
-        public int BelongBoundsIndex { get; protected set; } = -1;
+        public BoundsBasedObjectManager<BOUNDS, DATA> Manager
+        {
+            get { return this.manager; }
+            set { if (this.manager == null) this.manager = value; }
+        }
 
-        public T BelongBounds { get { return this.BoundsBasedObjectManager.Bounds[this.BelongBoundsIndex]; } }
+        public int BelongBoundsIndex { get; protected set; } = BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
+
+        public BOUNDS BelongBounds { get { return this.manager.Bounds[this.BelongBoundsIndex]; } }
 
         public bool OutOfBounds { get; private set; }
 
-        public new Transform transform { get; protected set; }
+        public DATA Data { get; protected set; }
 
         #endregion Property
 
@@ -22,8 +27,8 @@ namespace ObjectManagementSystem.BoundsBased
 
         protected override void Awake()
         {
-            this.BoundsBasedObjectManager = (BoundsBasedObjectManager<T, U>)base.objectManager;
-            this.transform = base.transform;
+            base.Awake();
+            this.Data = GetComponent<DATA>();
         }
 
         protected virtual void LateUpdate()
@@ -39,14 +44,14 @@ namespace ObjectManagementSystem.BoundsBased
 
             int previousBoundsIndex = this.BelongBoundsIndex;
 
-            this.BelongBoundsIndex = this.BoundsBasedObjectManager.GetBelongBoundsIndex
-                                     (this.transform.position, this.BelongBoundsIndex);
+            this.BelongBoundsIndex = this.manager.GetBelongBoundsIndex
+                                    (this.transform.position, this.BelongBoundsIndex);
 
-            this.OutOfBounds = this.BelongBoundsIndex == -1;
+            this.OutOfBounds = this.BelongBoundsIndex == BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
 
             if (previousBoundsIndex != this.BelongBoundsIndex)
             {
-                this.BoundsBasedObjectManager.UpdateBelongBoundsIndex(this, previousBoundsIndex);
+                this.manager.UpdateBelongBoundsIndex(this, previousBoundsIndex);
             }
         }
 

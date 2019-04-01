@@ -2,19 +2,19 @@
 
 namespace ObjectManagementSystem
 {
-    public class ManagedObject<T> : MonoBehaviour
+    public class ManagedObject<DATA> : MonoBehaviour
     {
         #region Property
 
-        protected ObjectManager<T> objectManager;
+        protected ObjectManager<DATA> manager;
 
-        public ObjectManager<T> ObjectManager
+        public ObjectManager<DATA> Manager
         {
-            get { return this.objectManager; }
-            set { if (this.objectManager == null) this.objectManager = value; }
+            get { return this.manager; }
+            set { if (this.manager == null) this.manager = value; }
         }
 
-        public T Data { get; protected set; }
+        public DATA Data { get; protected set; }
 
         #endregion Property
 
@@ -22,7 +22,7 @@ namespace ObjectManagementSystem
 
         protected virtual void Awake()
         {
-            this.Data = GetComponent<T>();
+            this.Data = GetComponent<DATA>();
         }
 
         protected virtual void OnDestroy()
@@ -30,10 +30,10 @@ namespace ObjectManagementSystem
             // CAUTION:
             // ManagedObject might be removed from the outside of the ObjectManager.
 
-            if (this.objectManager != null)
+            if (this.manager != null)
             {
-                this.objectManager.ReleaseManagedObject(this);
-                this.objectManager = null;
+                this.manager.ReleaseManagedObject(this);
+                this.manager = null;
             }
         }
 

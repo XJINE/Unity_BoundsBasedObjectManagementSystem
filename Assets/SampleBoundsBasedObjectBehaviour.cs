@@ -56,7 +56,7 @@ namespace ObjectManagementSystem.BoundsBased
 
         protected virtual void UpdateTarget()
         {
-            var bounds = this.sampleBoundsBasedManagedObject.BoundsBasedObjectManager.Bounds;
+            var bounds = this.sampleBoundsBasedManagedObject.Manager.Bounds;
             this.target = bounds[Random.Range(0, bounds.Count)].GetRandomPoint();
         }
 

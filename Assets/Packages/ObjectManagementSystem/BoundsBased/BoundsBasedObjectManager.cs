@@ -4,18 +4,42 @@ using System.Collections.ObjectModel;
 
 namespace ObjectManagementSystem.BoundsBased
 {
-    public abstract class BoundsBasedObjectManager<S, T> : ObjectManager<T> where S : TransformBoundsMonoBehaviour
+    public abstract class BoundsBasedObjectManager<BOUNDS, DATA>
+        : MonoBehaviour, IInitializable where BOUNDS : TransformBoundsMonoBehaviour
     {
+        #region Field
+
+        public static readonly int OutOfBoundsIndex = -1;
+
+        public int maxCount = 100;
+
+        #endregion Field
+
         #region Property
 
+        protected List<BoundsBasedManagedObject<BOUNDS, DATA>> managedObjects;
+
+        public ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>> ManagedObjects
+        {
+            private set;
+            get;
+        }
+
+        public bool IsFilled
+        {
+            get { return this.managedObjects.Count >= this.maxCount; }
+        }
+
+        public bool IsInitialized { get; protected set; }
+
         [SerializeField]
-        protected List<S> bounds;
+        protected List<BOUNDS> bounds;
 
-        public ReadOnlyCollection<S> Bounds { get; private set; }
+        public ReadOnlyCollection<BOUNDS> Bounds { get; private set; }
 
-        protected List<List<BoundsBasedManagedObject<S, T>>> managedObjectsInBounds;
+        protected List<List<BoundsBasedManagedObject<BOUNDS, DATA>>> managedObjectsInBounds;
 
-        public ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<S, T>>> ManagedObjectsInBounds 
+        public ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>> ManagedObjectsInBounds 
         {
             get;
             private set;
@@ -25,73 +49,78 @@ namespace ObjectManagementSystem.BoundsBased
 
         #region Method
 
-        public override bool Initialize()
+        protected virtual void Awake()
         {
-            if (!base.Initialize())
+            Initialize();
+        }
+
+        public virtual bool Initialize()
+        {
+            if (this.IsInitialized)
             {
                 return false;
             }
 
-            this.Bounds = new ReadOnlyCollection<S>(this.bounds);
+            this.IsInitialized = true;
+
+            this.managedObjects = new List<BoundsBasedManagedObject<BOUNDS, DATA>>();
+            this.ManagedObjects = new ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>(this.managedObjects);
+
+            this.Bounds = new ReadOnlyCollection<BOUNDS>(this.bounds);
 
             this.managedObjectsInBounds
-                = new List<List<BoundsBasedManagedObject<S, T>>>();
+                = new List<List<BoundsBasedManagedObject<BOUNDS, DATA>>>();
 
             var managedObjectsInBoundsReadOnly
-                = new List<ReadOnlyCollection<BoundsBasedManagedObject<S, T>>>();
+                = new List<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>();
 
             for (int i = 0; i < this.bounds.Count; i++)
             {
                 this.managedObjectsInBounds.Add
-                    (new List<BoundsBasedManagedObject<S, T>>());
+                    (new List<BoundsBasedManagedObject<BOUNDS, DATA>>());
 
                 managedObjectsInBoundsReadOnly.Add
-                    (new ReadOnlyCollection<BoundsBasedManagedObject<S, T>>(this.managedObjectsInBounds[i]));
+                    (new ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>(this.managedObjectsInBounds[i]));
             }
 
             this.ManagedObjectsInBounds
-                = new ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<S, T>>>
+                = new ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>
                 (managedObjectsInBoundsReadOnly);
 
             return true;
         }
 
-        public override U AddManagedObject<U>(GameObject gameObject)
+        public virtual MANAGED_OBJECT AddManagedObject<MANAGED_OBJECT>(GameObject gameObject)
+            where MANAGED_OBJECT : BoundsBasedManagedObject<BOUNDS, DATA>
         {
-            // CAUTION:
-            // Can not be able to override generic's "where".
-
-            U managedObject = base.AddManagedObject<U>(gameObject);
-
-            if (managedObject == null)
+            if (this.IsFilled)
             {
                 return null;
             }
 
-            var boundsBasedManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
-            boundsBasedManagedObject.UpdateBelongBounds();
+            MANAGED_OBJECT managedObject = gameObject.AddComponent(typeof(MANAGED_OBJECT)) as MANAGED_OBJECT;
+            managedObject.Manager = this;
+            managedObject.UpdateBelongBounds();
+
+            this.managedObjects.Add(managedObject);
 
             return managedObject;
         }
 
-        public override void ReleaseManagedObject(ManagedObject<T> managedObject)
+        public virtual void ReleaseManagedObject(BoundsBasedManagedObject<BOUNDS, DATA> managedObject)
         {
-            if (base.IsManage(managedObject))
+            if (this.IsManage(managedObject))
             {
-                if (base.managedObjects.Remove(managedObject))
+                if (this.managedObjects.Remove(managedObject))
                 {
-                    BoundsBasedManagedObject<S, T> boundsBaseManagedObject = managedObject as BoundsBasedManagedObject<S, T>;
-
-                    if (boundsBaseManagedObject == null)
+                    if (managedObject.BelongBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
                     {
-                        return;
+                        this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Remove(managedObject);
                     }
 
-                    this.managedObjectsInBounds[boundsBaseManagedObject.BelongBoundsIndex].Remove(boundsBaseManagedObject);
-
-                    // CAUTION:
-                    // Destroy calls ReleaseManagedObject again
-                    // with ManagedObject<T>.OnDestroy().
+                    // NOTE:
+                    // ManagedObject.OnDestroy() will call this function again,
+                    // but this.IsManage() step will be failed.
 
                     GameObject.Destroy(managedObject);
                 }
@@ -99,14 +128,14 @@ namespace ObjectManagementSystem.BoundsBased
         }
 
         public virtual void UpdateBelongBoundsIndex
-        (BoundsBasedManagedObject<S, T> managedObject, int previousBoundsIndex)
+            (BoundsBasedManagedObject<BOUNDS, DATA> managedObject, int previousBoundsIndex)
         {
-            if (!base.IsManage(managedObject))
+            if (!this.IsManage(managedObject))
             {
                 return;
             }
 
-            if (previousBoundsIndex != -1)
+            if (previousBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
             {
                 int index = this.managedObjectsInBounds[previousBoundsIndex].IndexOf(managedObject);
 
@@ -118,7 +147,7 @@ namespace ObjectManagementSystem.BoundsBased
                 this.managedObjectsInBounds[previousBoundsIndex].RemoveAt(index);
             }
 
-            if (managedObject.BelongBoundsIndex != -1)
+            if (managedObject.BelongBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
             {
                 this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Add(managedObject);
             }
@@ -127,7 +156,7 @@ namespace ObjectManagementSystem.BoundsBased
         public int GetBelongBoundsIndex(Vector3 point, int currentIndex = 0)
         {
             // NOTE:
-            // If the point not belong in any bounds, return -1.
+            // If the point not belong in any bounds, return OutOfBoundsIndex.
 
             if (0 <= currentIndex)
             {
@@ -152,7 +181,7 @@ namespace ObjectManagementSystem.BoundsBased
                     }
                 }
 
-                return -1;
+                return BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
             }
 
             for(int i = 0; i < this.bounds.Count; i++)
@@ -163,7 +192,12 @@ namespace ObjectManagementSystem.BoundsBased
                 }
             }
 
-            return -1;
+            return BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
+        }
+
+        public bool IsManage(BoundsBasedManagedObject<BOUNDS, DATA> managedObject)
+        {
+            return managedObject.Manager == this;
         }
 
         #endregion Method
