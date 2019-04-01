@@ -30,9 +30,10 @@ namespace ObjectManagementSystem
             // CAUTION:
             // ManagedObject might be removed from the outside of the ObjectManager.
 
-            if (this.ObjectManager != null)
+            if (this.objectManager != null)
             {
-                this.ObjectManager.ReleaseManagedObject(this);
+                this.objectManager.ReleaseManagedObject(this);
+                this.objectManager = null;
             }
         }
 

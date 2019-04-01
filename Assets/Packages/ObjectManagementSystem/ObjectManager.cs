@@ -80,13 +80,17 @@ namespace ObjectManagementSystem
 
         public virtual void ReleaseManagedObject(ManagedObject<T> managedObject)
         {
+            // CAUTION:
+            // Release must be done immediately.
+            // So it must be done Remove() before GameObject.Destroy().
+
             if (this.IsManage(managedObject))
             {
                 if (this.managedObjects.Remove(managedObject))
                 {
-                    // CAUTION:
-                    // Destroy calls ReleaseManagedObject again
-                    // with ManagedObject<T>.OnDestroy().
+                    // NOTE:
+                    // ManagedObject.OnDestroy() will call this function again,
+                    // but this.IsManage() step will be failed.
 
                     GameObject.Destroy(managedObject);
                 }
