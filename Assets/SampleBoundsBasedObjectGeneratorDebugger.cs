@@ -36,6 +36,7 @@ namespace ObjectManagementSystem.BoundsBased
             {
                 this.ObjectGenerator.GenerateRandom<SampleBoundsBasedManagedObject>(Vector3.zero);
             }
+
             if (Input.GetKeyDown(this.removeAllKey))
             {
                 this.ObjectGenerator.ObjectManager.RemoveAllManagedObjects();
@@ -49,7 +50,7 @@ namespace ObjectManagementSystem.BoundsBased
             GUI.Label(new Rect(20, 20, 300, 20), "Press " + this.generateKey + " to Add New Object.");
             GUI.Label(new Rect(20, 40, 300, 20), "Press Delete " + this.removeAllKey + " to Remove All Objects.");
             GUI.Label(new Rect(20, 60, 300, 20), "Object Count : " + this.ObjectGenerator.ObjectManager.ManagedObjects.Count
-                                                           + " / " + this.ObjectGenerator.ObjectManager.MaxCount);
+                                                           + " / " + this.ObjectGenerator.ObjectManager.maxCount);
         }
     }
 }

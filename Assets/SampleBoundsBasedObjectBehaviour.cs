@@ -6,8 +6,6 @@ namespace ObjectManagementSystem.BoundsBased
     {
         #region Field
 
-        public float lifeCount = 1000f;
-
         protected Vector3 target;
 
         protected SampleBoundsBasedManagedObject sampleBoundsBasedManagedObject;
@@ -20,10 +18,11 @@ namespace ObjectManagementSystem.BoundsBased
         {
             // NOTE:
             // SampleBoundsBaseManagedObject cannot get in Awake()
-            // because the component is added after instantiation of this.
-            // Awake() is just called after instantiation.
+            // because it is attached after registration into Manager with AddManagedObject().
 
             this.sampleBoundsBasedManagedObject = base.GetComponent<SampleBoundsBasedManagedObject>();
+
+            GameObject.Destroy(base.gameObject, 30f);
         }
 
         protected virtual void Update()
@@ -41,37 +40,33 @@ namespace ObjectManagementSystem.BoundsBased
 
             if (this.sampleBoundsBasedManagedObject.OutOfBounds)
             {
-                UpdateColor(Color.black);
+                SetColor(Color.black);
             }
             else
             {
-                UpdateColor(this.sampleBoundsBasedManagedObject.BelongBounds.gizmoColor);
-            }
-
-            if (this.lifeCount < 0)
-            {
-                GameObject.Destroy(base.gameObject);
+                SetColor(this.sampleBoundsBasedManagedObject.BelongBounds.gizmoColor);
             }
         }
 
         protected virtual void UpdateTarget()
         {
-            var bounds = this.sampleBoundsBasedManagedObject.Manager.Bounds;
-            this.target = bounds[Random.Range(0, bounds.Count)].GetRandomPoint();
+            var allBounds = this.sampleBoundsBasedManagedObject.Manager.Bounds;
+            var bounds = allBounds[Random.Range(0, allBounds.Count)];
+
+            this.target = new Vector3()
+            {
+                x = Random.Range(bounds.Min.x, bounds.Max.x),
+                y = Random.Range(bounds.Min.y, bounds.Max.y),
+                z = Random.Range(bounds.Min.z, bounds.Max.z),
+            };
         }
 
-        protected virtual void UpdateColor(Color color)
+        public void SetColor(Color color)
         {
             MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
-            materialPropertyBlock.SetColor("_Color", color);
-            base.GetComponent<Renderer>().SetPropertyBlock(materialPropertyBlock);
-        }
+                                  materialPropertyBlock.SetColor("_Color", color);
 
-        protected virtual void OnDrawGizmos()
-        {
-            #if UNITY_EDITOR
-            UnityEditor.Handles.Label(base.transform.position + Vector3.up, this.lifeCount.ToString());
-            #endif
+            base.GetComponent<Renderer>().SetPropertyBlock(materialPropertyBlock);
         }
 
         #endregion Method
