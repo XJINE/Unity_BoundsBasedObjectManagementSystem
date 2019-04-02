@@ -6,6 +6,12 @@ namespace ObjectManagementSystem
 {
     public class ObjectManager<DATA> : MonoBehaviour, IInitializable
     {
+        #region Field
+
+        public int maxCount = 100;
+
+        #endregion Field
+
         #region Property
 
         protected List<ManagedObject<DATA>> managedObjects;
@@ -14,19 +20,6 @@ namespace ObjectManagementSystem
         {
             private set;
             get;
-        }
-
-        [SerializeField]
-        protected int maxCount = 100;
-
-        public int MaxCount
-        {
-            get { return this.maxCount; }
-            set
-            {
-                this.maxCount = value;
-                TrimManagedObjects();
-            }
         }
 
         public bool IsFilled
@@ -63,14 +56,20 @@ namespace ObjectManagementSystem
             return true;
         }
 
-        public virtual U AddManagedObject<U>(GameObject gameObject) where U : ManagedObject<DATA>
+        public virtual MANAGED_OBJECT AddManagedObject<MANAGED_OBJECT>(GameObject gameObject)
+                 where MANAGED_OBJECT : ManagedObject<DATA>
         {
+            // NOTE:
+            // Because of Unity can not add generic MonoBehaviour to an object,
+            // It is hard to handle/limit ManagedObject<> type.
+
             if (this.IsFilled)
             {
                 return null;
             }
 
-            U managedObject = gameObject.AddComponent(typeof(U)) as U;
+            var managedObject = gameObject.AddComponent(typeof(MANAGED_OBJECT)) as MANAGED_OBJECT;
+
             managedObject.Manager = this;
 
             this.managedObjects.Add(managedObject);
@@ -104,46 +103,6 @@ namespace ObjectManagementSystem
             for (int i = count; i >= 0; i--)
             {
                 ReleaseManagedObject(this.managedObjects[i]);
-            }
-        }
-
-        public virtual void RemoveManagedObject(ManagedObject<DATA> managedObject)
-        {
-            if (this.IsManage(managedObject))
-            {
-                this.managedObjects.Remove(managedObject);
-                GameObject.Destroy(managedObject.gameObject);
-            }
-        }
-
-        public virtual void RemoveAllManagedObjects()
-        {
-            int count = this.managedObjects.Count - 1;
-
-            for (int i = count; i >= 0; i--)
-            {
-                RemoveManagedObject(this.managedObjects[i]);
-            }
-        }
-
-        public virtual void RemoveOldManagedObjects(int removeCount)
-        {
-            for (int i = 0; i < removeCount; i++)
-            {
-                if (this.managedObjects.Count > 0)
-                {
-                    RemoveManagedObject(this.managedObjects[0]);
-                }
-            }
-        }
-
-        public virtual void TrimManagedObjects()
-        {
-            int trimCount = this.managedObjects.Count - this.maxCount;
-
-            if (trimCount > 0)
-            {
-                RemoveOldManagedObjects(trimCount);
             }
         }
 

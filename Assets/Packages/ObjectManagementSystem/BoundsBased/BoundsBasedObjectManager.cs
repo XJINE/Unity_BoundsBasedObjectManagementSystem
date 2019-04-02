@@ -30,7 +30,10 @@ namespace ObjectManagementSystem.BoundsBased
             get { return this.managedObjects.Count >= this.maxCount; }
         }
 
-        public bool IsInitialized { get; protected set; }
+        public bool IsInitialized
+        {
+            get; protected set;
+        }
 
         [SerializeField]
         protected List<BOUNDS> bounds;
@@ -99,8 +102,8 @@ namespace ObjectManagementSystem.BoundsBased
             }
 
             MANAGED_OBJECT managedObject = gameObject.AddComponent(typeof(MANAGED_OBJECT)) as MANAGED_OBJECT;
-            managedObject.Manager = this;
-            managedObject.UpdateBelongBounds();
+                           managedObject.Manager = this;
+                           managedObject.UpdateBelongBounds();
 
             this.managedObjects.Add(managedObject);
 

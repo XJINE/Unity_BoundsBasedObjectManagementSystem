@@ -22,7 +22,7 @@ namespace ObjectManagementSystem
 
         protected virtual void Awake()
         {
-            this.Data = GetComponent<DATA>();
+            this.Data = base.GetComponent<DATA>();
         }
 
         protected virtual void OnDestroy()
