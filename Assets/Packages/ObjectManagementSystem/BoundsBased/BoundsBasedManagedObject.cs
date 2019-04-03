@@ -1,7 +1,7 @@
 ﻿namespace ObjectManagementSystem.BoundsBased
 {
     public class BoundsBasedManagedObject<BOUNDS, DATA>
-        : TransformMonoBehaviour where BOUNDS : TransformBoundsMonoBehaviour
+        : TransformMonoBehaviour where BOUNDS : BoundsMonoBehaviour
     {
         #region Property
 

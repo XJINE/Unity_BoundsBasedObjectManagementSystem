@@ -1,4 +1,4 @@
 ﻿namespace ObjectManagementSystem.BoundsBased
 {
-    public class SampleBounds : TransformBoundsMonoBehaviour { }
+    public class SampleBounds : BoundsMonoBehaviour { }
 }

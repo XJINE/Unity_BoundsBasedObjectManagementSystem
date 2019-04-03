@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public interface IBounds
+public interface IBoundsMonoBehaviour
 {
     #region Property
 

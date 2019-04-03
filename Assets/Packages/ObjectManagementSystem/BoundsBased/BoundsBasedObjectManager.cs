@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 namespace ObjectManagementSystem.BoundsBased
 {
     public abstract class BoundsBasedObjectManager<BOUNDS, DATA>
-        : MonoBehaviour, IInitializable where BOUNDS : TransformBoundsMonoBehaviour
+        : MonoBehaviour, IInitializable where BOUNDS : BoundsMonoBehaviour
     {
         #region Field
 

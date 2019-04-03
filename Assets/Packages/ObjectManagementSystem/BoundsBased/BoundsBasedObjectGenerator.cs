@@ -3,7 +3,7 @@
 namespace ObjectManagementSystem.BoundsBased
 {
     public class BoundsBasedObjectGenerator<BOUNDS, DATA>
-        : MonoBehaviour where BOUNDS : TransformBoundsMonoBehaviour
+        : MonoBehaviour where BOUNDS : BoundsMonoBehaviour
     {
         #region Field
 
