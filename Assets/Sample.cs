@@ -7,13 +7,10 @@ namespace ObjectManagementSystem.BoundsBased
         #region Field
 
         public SampleBoundsBasedObjectGenerator generator;
-
-        public SampleBounds paintBounds;
-        public Color[]      paintColors = new Color[] { Color.red, Color.blue, Color.green };
+        public SampleBounds resizeBounds;
 
         public KeyCode generateKey  = KeyCode.Return;
         public KeyCode removeAllKey = KeyCode.Delete;
-        public KeyCode paintKey     = KeyCode.P;
 
         #endregion Field
 
@@ -23,8 +20,15 @@ namespace ObjectManagementSystem.BoundsBased
         {
             if (Input.GetKeyDown(this.generateKey))
             {
+                if (this.generator.Manager.IsFilled)
+                {
+                    return;
+                }
+
                 var managedObject = this.generator.Generate<SampleBoundsBasedManagedObject>
                                     (Random.Range(0, this.generator.objects.Length));
+
+                GameObject.Destroy(managedObject.gameObject, 30);
             }
 
             if (Input.GetKeyDown(this.removeAllKey))
@@ -35,13 +39,14 @@ namespace ObjectManagementSystem.BoundsBased
                 }
             }
 
-            if (Input.GetKeyDown(this.paintKey))
+            foreach (var managedObject in this.generator.Manager.ManagedObjects)
             {
-                //int boundsIndex = Bounds
-                foreach (var managedObject in this.generator.Manager.ManagedObjectsInBounds)
-                {
-                    managedObject.Data.SetColor(this.paintColors[Random.Range(0, this.paintColors.Length)]);
-                }
+                managedObject.transform.localScale = Vector3.one;
+            }
+
+            foreach (var managedObject in this.generator.Manager.ManagedObjectsInBounds[this.resizeBounds])
+            {
+                managedObject.transform.localScale = Vector3.one * 0.5f;
             }
         }
 
@@ -49,7 +54,6 @@ namespace ObjectManagementSystem.BoundsBased
         {
             GUILayout.Label("Press " + this.generateKey  + " to Add a New Object.");
             GUILayout.Label("Press " + this.removeAllKey + " to Remove All Objects.");
-            GUILayout.Label("Press " + this.paintKey     + " to Paint Objects.");
 
             GUILayout.Label("Object Count : " + this.generator.Manager.ManagedObjects.Count
                                       + " / " + this.generator.Manager.maxCount);

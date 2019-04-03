@@ -13,9 +13,7 @@
             set { if (this.manager == null) this.manager = value; }
         }
 
-        public int BelongBoundsIndex { get; protected set; } = BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
-
-        public BOUNDS BelongBounds { get { return this.manager.Bounds[this.BelongBoundsIndex]; } }
+        public BOUNDS BelongBounds { get; protected set; }
 
         public bool OutOfBounds { get; private set; }
 
@@ -36,22 +34,32 @@
             UpdateBelongBounds();
         }
 
+        protected virtual void OnDestroy()
+        {
+            // CAUTION:
+            // ManagedObject might be removed from the outside of the ObjectManager.
+
+            if (this.manager != null)
+            {
+                this.manager.ReleaseManagedObject(this);
+                this.manager = null;
+            }
+        }
+
         public virtual void UpdateBelongBounds()
         {
             // NOTE:
             // This method called from every LateUpdate().
             // However, you can call this method to manual update if you need.
 
-            int previousBoundsIndex = this.BelongBoundsIndex;
+            BOUNDS previousBounds = this.BelongBounds;
 
-            this.BelongBoundsIndex = this.manager.GetBelongBoundsIndex
-                                    (this.transform.position, this.BelongBoundsIndex);
+            this.BelongBounds = this.manager.GetBelongBounds(this.transform.position, previousBounds);
+            this.OutOfBounds  = this.BelongBounds == null;
 
-            this.OutOfBounds = this.BelongBoundsIndex == BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
-
-            if (previousBoundsIndex != this.BelongBoundsIndex)
+            if (previousBounds != this.BelongBounds)
             {
-                this.manager.UpdateBelongBoundsIndex(this, previousBoundsIndex);
+                this.manager.UpdateBelongBounds(this, previousBounds);
             }
         }
 

@@ -21,8 +21,6 @@ namespace ObjectManagementSystem.BoundsBased
             // because it is attached after registration into Manager with AddManagedObject().
 
             this.sampleBoundsBasedManagedObject = base.GetComponent<SampleBoundsBasedManagedObject>();
-
-            GameObject.Destroy(base.gameObject, 30f);
         }
 
         protected virtual void Update()

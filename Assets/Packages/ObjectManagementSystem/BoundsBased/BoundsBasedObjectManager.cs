@@ -9,8 +9,6 @@ namespace ObjectManagementSystem.BoundsBased
     {
         #region Field
 
-        public static readonly int OutOfBoundsIndex = -1;
-
         public int maxCount = 100;
 
         #endregion Field
@@ -40,9 +38,9 @@ namespace ObjectManagementSystem.BoundsBased
 
         public ReadOnlyCollection<BOUNDS> Bounds { get; private set; }
 
-        protected List<List<BoundsBasedManagedObject<BOUNDS, DATA>>> managedObjectsInBounds;
+        protected Dictionary<BOUNDS, List<BoundsBasedManagedObject<BOUNDS, DATA>>> managedObjectsInBounds;
 
-        public ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>> ManagedObjectsInBounds 
+        public ReadOnlyDictionary<BOUNDS, ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>> ManagedObjectsInBounds 
         {
             get;
             private set;
@@ -71,24 +69,20 @@ namespace ObjectManagementSystem.BoundsBased
 
             this.Bounds = new ReadOnlyCollection<BOUNDS>(this.bounds);
 
-            this.managedObjectsInBounds
-                = new List<List<BoundsBasedManagedObject<BOUNDS, DATA>>>();
+            this.managedObjectsInBounds        = new Dictionary<BOUNDS, List<BoundsBasedManagedObject<BOUNDS, DATA>>>();
+            var managedObjectsInBoundsReadOnly = new Dictionary<BOUNDS, ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>();
 
-            var managedObjectsInBoundsReadOnly
-                = new List<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>();
-
-            for (int i = 0; i < this.bounds.Count; i++)
+            foreach (var bounds in this.bounds)
             {
                 this.managedObjectsInBounds.Add
-                    (new List<BoundsBasedManagedObject<BOUNDS, DATA>>());
-
+                (bounds, new List<BoundsBasedManagedObject<BOUNDS, DATA>>());
+                
                 managedObjectsInBoundsReadOnly.Add
-                    (new ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>(this.managedObjectsInBounds[i]));
+                (bounds, new ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>(this.managedObjectsInBounds[bounds]));
             }
 
             this.ManagedObjectsInBounds
-                = new ReadOnlyCollection<ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>
-                (managedObjectsInBoundsReadOnly);
+            = new ReadOnlyDictionary<BOUNDS, ReadOnlyCollection<BoundsBasedManagedObject<BOUNDS, DATA>>>(managedObjectsInBoundsReadOnly);
 
             return true;
         }
@@ -116,9 +110,9 @@ namespace ObjectManagementSystem.BoundsBased
             {
                 if (this.managedObjects.Remove(managedObject))
                 {
-                    if (managedObject.BelongBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
+                    if (managedObject.BelongBounds != null)
                     {
-                        this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Remove(managedObject);
+                        this.managedObjectsInBounds[managedObject.BelongBounds].Remove(managedObject);
                     }
 
                     // NOTE:
@@ -130,72 +124,65 @@ namespace ObjectManagementSystem.BoundsBased
             }
         }
 
-        public virtual void UpdateBelongBoundsIndex
-            (BoundsBasedManagedObject<BOUNDS, DATA> managedObject, int previousBoundsIndex)
+        public virtual void UpdateBelongBounds
+             (BoundsBasedManagedObject<BOUNDS, DATA> managedObject, BOUNDS previousBounds)
         {
             if (!this.IsManage(managedObject))
             {
                 return;
             }
 
-            if (previousBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
+            if (previousBounds != null)
             {
-                int index = this.managedObjectsInBounds[previousBoundsIndex].IndexOf(managedObject);
+                var managedObjectsInBounds = this.managedObjectsInBounds[previousBounds];
+
+                int index = managedObjectsInBounds.IndexOf(managedObject);
 
                 if (index < 0)
                 {
                     return;
                 }
 
-                this.managedObjectsInBounds[previousBoundsIndex].RemoveAt(index);
+                managedObjectsInBounds.RemoveAt(index);
             }
 
-            if (managedObject.BelongBoundsIndex != BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex)
+            if (managedObject.BelongBounds != null)
             {
-                this.managedObjectsInBounds[managedObject.BelongBoundsIndex].Add(managedObject);
+                this.managedObjectsInBounds[managedObject.BelongBounds].Add(managedObject);
             }
         }
 
-        public int GetBelongBoundsIndex(Vector3 point, int currentIndex = 0)
+        public BOUNDS GetBelongBounds(Vector3 point, BOUNDS currentBounds = null)
         {
-            // NOTE:
-            // If the point not belong in any bounds, return OutOfBoundsIndex.
-
-            if (0 <= currentIndex)
+            if (currentBounds != null)
             {
-                if (this.bounds[currentIndex].Contains(point))
+                if (currentBounds.Contains(point))
                 {
-                    return currentIndex;
+                    return currentBounds;
                 }
 
-                for (int i = 0; i < currentIndex; i++)
-                {
-                    if (this.bounds[i].Contains(point))
-                    {
-                        return i;
-                    }
-                }
-
-                for (int i = currentIndex + 1; i < this.bounds.Count; i++)
+                for (int i = 0; i < this.bounds.Count; i++)
                 {
                     if (this.bounds[i].Contains(point))
                     {
-                        return i;
+                        return this.bounds[i];
                     }
                 }
 
-                return BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
+                return null;
             }
+
+            // if (currentBounds == null)
 
             for(int i = 0; i < this.bounds.Count; i++)
             {
                 if (this.bounds[i].Contains(point))
                 {
-                    return i;
+                    return this.bounds[i];
                 }
             }
 
-            return BoundsBasedObjectManager<BOUNDS, DATA>.OutOfBoundsIndex;
+            return null;
         }
 
         public bool IsManage(BoundsBasedManagedObject<BOUNDS, DATA> managedObject)
