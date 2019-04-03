@@ -1,4 +1,5 @@
 ﻿namespace ObjectManagementSystem.BoundsBased
 {
-    public class SampleBoundsBasedObjectGenerator : ObjectGenerator<SampleBoundsBasedObjectBehaviour> { }
+    public class SampleBoundsBasedObjectGenerator
+        : BoundsBasedObjectGenerator<SampleBounds, SampleBoundsBasedObjectBehaviour> { }
 }

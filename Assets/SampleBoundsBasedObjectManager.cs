@@ -1,5 +1,5 @@
 ﻿namespace ObjectManagementSystem.BoundsBased
 {
     public class SampleBoundsBasedObjectManager
-    : BoundsBasedObjectManager<SampleBounds, SampleBoundsBasedObjectBehaviour> { }
+        : BoundsBasedObjectManager<SampleBounds, SampleBoundsBasedObjectBehaviour> { }
 }
